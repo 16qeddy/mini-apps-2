@@ -14,10 +14,12 @@ class App extends Component {
       offset: 0,
       data: [],
       perPage: 10,
-      currentPage: 0
+      currentPage: 0,
+      query: ''
     }
     this.getData = this.getData.bind(this);
     this.handlePageClick = this.handlePageClick.bind(this);
+    this.searchHandler = this.searchHandler.bind(this);
   }
 
   componentDidMount() {
@@ -32,11 +34,25 @@ class App extends Component {
           const data = res.data;
           const slice = data.slice(this.state.offset, this.state.offset + this.state.perPage)
           const postData = slice.map(pd => <div className="infoCard">
-            <p>{pd.date}</p>
-            <p>{pd.description}</p>
-            <p>{pd.lang}</p>
-            <p>{pd.category1}</p>
-            <p>{pd.granularity}</p>
+            <p>date: {pd.date}</p>
+            <p>discription: {pd.description}</p>
+            <p>Catagory: {pd.category2}</p>
+          </div>)
+          this.setState({
+            pageCount: Math.ceil(data.length / this.state.perPage),
+            data: postData
+          })
+        })
+    } else {
+      axios.get(`http://localhost:3000/events?q=${q}`)
+        .then((res) => {
+          console.log(res);
+          const data = res.data;
+          const slice = data.slice(this.state.offset, this.state.offset + this.state.perPage)
+          const postData = slice.map(pd => <div className="infoCard">
+            <p>date: {pd.date}</p>
+            <p>discription: {pd.description}</p>
+            <p>Catagory: {pd.category2}</p>
           </div>)
           this.setState({
             pageCount: Math.ceil(data.length / this.state.perPage),
@@ -53,27 +69,40 @@ class App extends Component {
       currentPage: selectedPage,
       offset: offset
     }, () => {
-      this.getData()
+      if (this.state.query === '') {
+        this.getData();
+      } else {
+        this.getData(this.state.query);
+      }
     });
 
   };
+  searchHandler(e) {
+    this.setState({
+      query: e.target.value
+    })
+    this.getData(this.state.query);
+  }
   render() {
     return (
-      <div>
-        {this.state.data}
-        <ReactPaginate
-          previousLabel={'previous'}
-          nextLabel={'next'}
-          breakLabel={'...'}
-          breakClassName={'break-me'}
-          pageCount={this.state.pageCount}
-          marginPagesDisplayed={2}
-          pageRangeDisplayed={5}
-          onPageChange={this.handlePageClick}
-          containerClassName={'pagination'}
-          subContainerClassName={'pages pagination'}
-          activeClassName={'active'}
-        />
+      <div className="appContainer">
+        <div className="appCol">
+          <input onChange={this.searchHandler} placeholder="search..."></input>
+          {this.state.data}
+          <ReactPaginate
+            previousLabel={'previous'}
+            nextLabel={'next'}
+            breakLabel={'...'}
+            breakClassName={'break-me'}
+            pageCount={this.state.pageCount}
+            marginPagesDisplayed={2}
+            pageRangeDisplayed={5}
+            onPageChange={this.handlePageClick}
+            containerClassName={'pagination'}
+            subContainerClassName={'pages pagination'}
+            activeClassName={'active'}
+          />
+        </div>
       </div>
     );
   }
